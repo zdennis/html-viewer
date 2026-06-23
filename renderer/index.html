@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML Viewer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+
+    webview {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    #shrink-btn {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      z-index: 9999;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 14px;
+      line-height: 28px;
+      text-align: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #shrink-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+    }
+
+    #expand-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9998;
+      background: rgba(20, 20, 20, 0.92);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #expand-overlay.visible {
+      display: flex;
+    }
+
+    #expand-label {
+      color: #fff;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <webview id="webview" allowpopups></webview>
+
+  <button id="shrink-btn" title="Shrink to corner">⊠</button>
+
+  <div id="expand-overlay" title="Expand window">
+    <span id="expand-label">&lt; &gt;</span>
+  </div>
+
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>

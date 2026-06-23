@@ -1,0 +1,31 @@
+{
+  "name": "html-viewer",
+  "version": "1.0.0",
+  "description": "A macOS HTML viewer launched from CLI",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.zdennis.html-viewer",
+    "productName": "HTML Viewer",
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "linux": false,
+    "win": false,
+    "files": ["main.js", "preload.js", "renderer/**/*"],
+    "bin": {
+      "html-viewer": "cli.js"
+    }
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
