@@ -13,7 +13,7 @@ The window floats above all other windows, auto-sizes to fit the content (capped
 
 ## Why this exists
 
-Claude produces HTML output. This gives it a place to send that output. Instead of opening a browser tab, you get a dedicated viewer that stays on top, out of the way, and disappears when you're done with it.
+When working with an LLM, I often want it to produce HTML content quickly and have one spot to view it. Instead of accumulating browser tabs, you get a dedicated viewer that stays on top, loads new content on command, and disappears when you're done with it.
 
 ---
 
