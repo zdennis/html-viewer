@@ -27,6 +27,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('copy-to-clipboard', { text });
   },
 
+  showContextMenu(selectionText) {
+    return ipcRenderer.invoke('show-context-menu', { selectionText });
+  },
+
   navBack() {
     return ipcRenderer.invoke('nav-back');
   },

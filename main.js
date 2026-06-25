@@ -132,6 +132,16 @@ function buildMenu() {
       ],
     },
     {
+      label: 'Edit',
+      submenu: [
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { type: 'separator' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
       label: 'View',
       submenu: [
         ...(process.env.NODE_ENV === 'development' || process.argv.includes('--dev')
@@ -244,6 +254,24 @@ ipcMain.handle('get-recent-files', () => loadRecent());
 
 ipcMain.handle('copy-to-clipboard', (event, { text }) => {
   clipboard.writeText(text);
+});
+
+ipcMain.handle('show-context-menu', (event, { selectionText }) => {
+  const hasSelection = selectionText && selectionText.trim().length > 0;
+  const template = [
+    {
+      label: 'Copy',
+      enabled: hasSelection,
+      click() {
+        if (hasSelection) clipboard.writeText(selectionText);
+      },
+    },
+    { type: 'separator' },
+    { label: 'Select All', click() { event.sender.selectAll(); } },
+  ];
+  const menu = Menu.buildFromTemplate(template);
+  const win = BrowserWindow.fromWebContents(event.sender);
+  menu.popup({ window: win });
 });
 
 ipcMain.handle('window-shrink', (event, { x, y, width, height }) => {
