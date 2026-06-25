@@ -10,6 +10,26 @@ const RECENT_MAX = 10;
 let mainWindow = null;
 let targetUrl = null;
 
+// ── Navigation history ─────────────────────────────────────────────────────
+
+const navHistory = [];   // array of { url, raw }
+let navIndex = -1;       // current position in history
+
+function navState() {
+  return { canBack: navIndex > 0, canForward: navIndex < navHistory.length - 1 };
+}
+
+function pushNav(resolved, raw) {
+  // Truncate forward history when a new file is loaded
+  navHistory.splice(navIndex + 1);
+  navHistory.push({ url: resolved, raw });
+  navIndex = navHistory.length - 1;
+}
+
+function sendNavState() {
+  if (mainWindow) mainWindow.webContents.send('nav-state', navState());
+}
+
 // ── CLI arg helpers ────────────────────────────────────────────────────────
 
 function parseExitAfterDelay(argv) {
@@ -137,15 +157,19 @@ function buildMenu() {
 
 // ── Window management ──────────────────────────────────────────────────────
 
-function loadUrlInWindow(raw) {
+function loadUrlInWindow(raw, isNavigation = false) {
   const resolved = resolveTarget(raw);
   if (!resolved) return;
   targetUrl = resolved;
   rawTarget = raw;
-  addRecent(raw);
-  buildMenu();
+  if (!isNavigation) {
+    pushNav(resolved, raw);
+    addRecent(raw);
+    buildMenu();
+  }
   if (mainWindow) {
     mainWindow.webContents.send('load-url', { url: resolved, raw });
+    sendNavState();
   }
 }
 
@@ -156,6 +180,7 @@ function createWindow(initialTarget) {
   if (initialTarget) {
     targetUrl = resolveTarget(initialTarget);
     rawTarget = initialTarget;
+    pushNav(targetUrl, initialTarget);
     addRecent(initialTarget);
     buildMenu();
   }
@@ -178,6 +203,8 @@ function createWindow(initialTarget) {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
+  mainWindow.webContents.once('did-finish-load', () => sendNavState());
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -187,7 +214,31 @@ function createWindow(initialTarget) {
 
 let rawTarget = null;
 
-ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget }));
+ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget, navState: navState() }));
+
+ipcMain.handle('nav-back', () => {
+  if (navIndex <= 0) return;
+  navIndex--;
+  const { url, raw } = navHistory[navIndex];
+  targetUrl = url;
+  rawTarget = raw;
+  if (mainWindow) {
+    mainWindow.webContents.send('load-url', { url, raw });
+    sendNavState();
+  }
+});
+
+ipcMain.handle('nav-forward', () => {
+  if (navIndex >= navHistory.length - 1) return;
+  navIndex++;
+  const { url, raw } = navHistory[navIndex];
+  targetUrl = url;
+  rawTarget = raw;
+  if (mainWindow) {
+    mainWindow.webContents.send('load-url', { url, raw });
+    sendNavState();
+  }
+});
 
 ipcMain.handle('get-recent-files', () => loadRecent());
 
@@ -235,8 +286,8 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on('second-instance', (event, argv) => {
-    // argv[0] = electron, argv[1] = script, argv[2..] = user args
-    const raw = argv.slice(2).find(a => !a.startsWith('-'));
+    // argv contains [electronBinary, appDir, ...userArgs]; skip both leading paths
+    const raw = argv.slice(2).find(a => !a.startsWith('-') && a !== __dirname);
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
@@ -267,7 +318,7 @@ if (!gotLock) {
     }
 
     const userArgs = process.argv.slice(2);
-    const rawArg = userArgs.find(a => !a.startsWith('-'));
+    const rawArg = userArgs.find(a => !a.startsWith('-') && a !== __dirname);
     const exitDelay = parseExitAfterDelay(userArgs);
     buildMenu();
     createWindow(rawArg || null);

@@ -27,6 +27,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('copy-to-clipboard', { text });
   },
 
+  navBack() {
+    return ipcRenderer.invoke('nav-back');
+  },
+
+  navForward() {
+    return ipcRenderer.invoke('nav-forward');
+  },
+
+  onNavState(callback) {
+    ipcRenderer.on('nav-state', (event, state) => callback(state));
+  },
+
   onLoadUrl(callback) {
     ipcRenderer.on('load-url', (event, urlValue) => callback(urlValue));
   },

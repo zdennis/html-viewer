@@ -2,6 +2,10 @@ const webview = document.getElementById('webview');
 const shrinkBtn = document.getElementById('shrink-btn');
 const expandOverlay = document.getElementById('expand-overlay');
 const titlebarLabel = document.getElementById('titlebar-label');
+const navBackBtn = document.getElementById('nav-back');
+const navForwardBtn = document.getElementById('nav-forward');
+const notFound = document.getElementById('not-found');
+const notFoundPath = document.getElementById('not-found-path');
 
 let currentRawPath = null;
 
@@ -43,10 +47,39 @@ titlebarLabel.addEventListener('click', async (e) => {
 
 let savedBounds = null;
 
+// ── Nav state ──────────────────────────────────────────────────────────────
+
+function applyNavState({ canBack, canForward }) {
+  navBackBtn.disabled = !canBack;
+  navForwardBtn.disabled = !canForward;
+}
+
+navBackBtn.addEventListener('click', async () => {
+  await window.electronAPI.navBack();
+});
+
+navForwardBtn.addEventListener('click', async () => {
+  await window.electronAPI.navForward();
+});
+
+window.electronAPI.onNavState(applyNavState);
+
 // ── Load initial URL ────────────────────────────────────────────────────────
 
+function showNotFound(rawPath) {
+  notFoundPath.textContent = rawPath || '';
+  notFound.style.display = 'flex';
+  webview.style.display = 'none';
+}
+
+function hideNotFound() {
+  notFound.style.display = 'none';
+  webview.style.display = '';
+}
+
 async function loadInitialUrl() {
-  const { url, raw } = await window.electronAPI.getUrl();
+  const { url, raw, navState } = await window.electronAPI.getUrl();
+  if (navState) applyNavState(navState);
   if (url) {
     webview.src = url;
     updateTitle(url, raw);
@@ -56,6 +89,7 @@ async function loadInitialUrl() {
 loadInitialUrl();
 
 webview.addEventListener('did-finish-load', () => {
+  hideNotFound();
   webview.executeJavaScript('document.documentElement.scrollHeight').then(contentHeight => {
     if (contentHeight > 0) {
       window.electronAPI.resizeToContent(contentHeight);
@@ -63,9 +97,15 @@ webview.addEventListener('did-finish-load', () => {
   }).catch(() => {});
 });
 
+webview.addEventListener('did-fail-load', (e) => {
+  if (e.errorCode === -3) return; // aborted/cancelled, not an error
+  showNotFound(currentRawPath);
+});
+
 // ── Listen for new URLs from main process (recent files, second-instance) ──
 
 window.electronAPI.onLoadUrl(({ url: newUrl, raw }) => {
+  hideNotFound();
   webview.src = newUrl;
   updateTitle(newUrl, raw);
   // If we're in shrunken state, expand back
