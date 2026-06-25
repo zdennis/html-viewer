@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
     "build": "electron-builder --mac"
   },
   "build": {
@@ -16,7 +17,8 @@
     },
     "linux": false,
     "win": false,
-    "files": ["main.js", "preload.js", "renderer/**/*"],
+    "files": ["main.js", "preload.js", "renderer/**/*", "assets/**/*"],
+    "icon": "assets/icon.png",
     "bin": {
       "html-viewer": "cli.js"
     }
