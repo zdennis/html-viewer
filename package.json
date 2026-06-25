@@ -20,7 +20,7 @@
     "files": ["main.js", "preload.js", "renderer/**/*", "assets/**/*"],
     "icon": "assets/icon.png",
     "bin": {
-      "html-viewer": "cli.js"
+      "html-viewer": "bin/html-viewer"
     }
   },
   "dependencies": {
