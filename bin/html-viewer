@@ -18,7 +18,7 @@
  *   open -a "HTML Viewer" ~/Desktop/page.html
  */
 
-const { spawnSync } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 
 const args = process.argv.slice(2);
@@ -48,13 +48,12 @@ Examples:
 const electronBin = require('electron');
 const appDir = path.join(__dirname, '..');
 
-const result = spawnSync(electronBin, [appDir, ...args], { stdio: 'inherit' });
-// spawnSync sets error when the process couldn't be started at all (ENOENT etc.)
-if (result.error) {
-  console.error('Failed to launch html-viewer:', result.error.message);
+const child = spawn(electronBin, [appDir, ...args], {
+  detached: true,
+  stdio: 'ignore',
+});
+child.on('error', (err) => {
+  console.error('Failed to launch html-viewer:', err.message);
   process.exit(1);
-}
-// Electron exits 0 on normal close, non-zero only on real errors
-if (result.status !== 0 && result.status !== null) {
-  process.exit(result.status);
-}
+});
+child.unref();
