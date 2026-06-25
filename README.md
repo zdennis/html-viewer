@@ -22,7 +22,7 @@ Claude produces HTML output. This gives it a place to send that output. Instead 
 Requires [Node.js](https://nodejs.org) and [Electron](https://electronjs.org).
 
 ```bash
-git clone https://github.com/yourname/html-viewer
+git clone https://github.com/zdennis/html-viewer
 cd html-viewer
 npm install
 ```
