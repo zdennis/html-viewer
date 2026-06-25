@@ -1,3 +1,15 @@
+# Dependencies
 node_modules/
+
+# Build output (electron-builder)
 dist/
 out/
+
+# Temporary files
+tmp/
+
+# macOS
+.DS_Store
+
+# Electron userData (written at runtime, not source)
+# ~/Library/Application Support/html-viewer/recent.json
