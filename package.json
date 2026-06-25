@@ -1,6 +1,6 @@
 {
   "name": "html-viewer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A macOS HTML viewer launched from CLI",
   "main": "main.js",
   "scripts": {
