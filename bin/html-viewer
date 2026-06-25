@@ -46,7 +46,7 @@ Examples:
 }
 
 const electronBin = require('electron');
-const appDir = path.join(__dirname);
+const appDir = path.join(__dirname, '..');
 
 const result = spawnSync(electronBin, [appDir, ...args], { stdio: 'inherit' });
 // spawnSync sets error when the process couldn't be started at all (ENOENT etc.)
