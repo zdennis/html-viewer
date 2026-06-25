@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, Menu, screen, shell } = require('electron');
+const { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -9,6 +9,15 @@ const RECENT_MAX = 10;
 
 let mainWindow = null;
 let targetUrl = null;
+
+// ── CLI arg helpers ────────────────────────────────────────────────────────
+
+function parseExitAfterDelay(argv) {
+  const idx = argv.indexOf('--exit-after-delay');
+  if (idx === -1) return null;
+  const val = parseInt(argv[idx + 1], 10);
+  return isNaN(val) ? null : val;
+}
 
 // ── Recent files (manual JSON, no electron-store) ──────────────────────────
 
@@ -128,19 +137,28 @@ function buildMenu() {
 
 // ── Window management ──────────────────────────────────────────────────────
 
-function loadUrlInWindow(rawTarget) {
-  const resolved = resolveTarget(rawTarget);
+function loadUrlInWindow(raw) {
+  const resolved = resolveTarget(raw);
   if (!resolved) return;
   targetUrl = resolved;
-  addRecent(rawTarget);
+  rawTarget = raw;
+  addRecent(raw);
   buildMenu();
   if (mainWindow) {
-    mainWindow.webContents.send('load-url', resolved);
+    mainWindow.webContents.send('load-url', { url: resolved, raw });
   }
 }
 
 function createWindow(initialTarget) {
   const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
+
+  // Resolve before the window loads so get-url IPC finds it immediately
+  if (initialTarget) {
+    targetUrl = resolveTarget(initialTarget);
+    rawTarget = initialTarget;
+    addRecent(initialTarget);
+    buildMenu();
+  }
 
   mainWindow = new BrowserWindow({
     width: 900,
@@ -148,6 +166,8 @@ function createWindow(initialTarget) {
     x: Math.round((sw - 900) / 2),
     y: Math.round((sh - 700) / 2),
     alwaysOnTop: true,
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 8, y: 8 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -158,15 +178,6 @@ function createWindow(initialTarget) {
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  mainWindow.webContents.once('did-finish-load', () => {
-    if (initialTarget) {
-      const resolved = resolveTarget(initialTarget);
-      targetUrl = resolved;
-      addRecent(initialTarget);
-      buildMenu();
-    }
-  });
-
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -174,43 +185,36 @@ function createWindow(initialTarget) {
 
 // ── IPC handlers ───────────────────────────────────────────────────────────
 
-ipcMain.handle('get-url', () => targetUrl);
+let rawTarget = null;
+
+ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget }));
 
 ipcMain.handle('get-recent-files', () => loadRecent());
+
+ipcMain.handle('copy-to-clipboard', (event, { text }) => {
+  clipboard.writeText(text);
+});
 
 ipcMain.handle('window-shrink', (event, { x, y, width, height }) => {
   if (!mainWindow) return;
   const display = screen.getDisplayNearestPoint({ x, y });
   const { x: dx, y: dy, width: dw, height: dh } = display.workArea;
   const MARGIN = 8;
-  const SIZE = 50;
+  const SIZE = 100;
 
-  // Determine nearest corner based on window center
-  const cx = x + width / 2;
-  const cy = y + height / 2;
-  const midX = dx + dw / 2;
-  const midY = dy + dh / 2;
-
-  let nx, ny;
-  if (cx <= midX && cy <= midY) {
-    // top-left
-    nx = dx + MARGIN;
-    ny = dy + MARGIN;
-  } else if (cx > midX && cy <= midY) {
-    // top-right
-    nx = dx + dw - SIZE - MARGIN;
-    ny = dy + MARGIN;
-  } else if (cx <= midX && cy > midY) {
-    // bottom-left
-    nx = dx + MARGIN;
-    ny = dy + dh - SIZE - MARGIN;
-  } else {
-    // bottom-right
-    nx = dx + dw - SIZE - MARGIN;
-    ny = dy + dh - SIZE - MARGIN;
-  }
+  const nx = dx + dw - SIZE - MARGIN;
+  const ny = dy + MARGIN;
 
   mainWindow.setBounds({ x: Math.round(nx), y: Math.round(ny), width: SIZE, height: SIZE });
+});
+
+ipcMain.handle('resize-to-content', (event, { contentHeight }) => {
+  if (!mainWindow) return;
+  const bounds = mainWindow.getBounds();
+  const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+  const maxHeight = Math.round(display.workArea.height * 0.8);
+  const newHeight = Math.min(contentHeight, maxHeight);
+  mainWindow.setBounds({ ...bounds, height: newHeight });
 });
 
 ipcMain.handle('window-expand', (event, { x, y, width, height }) => {
@@ -251,9 +255,26 @@ if (!gotLock) {
   });
 
   app.whenReady().then(() => {
-    const rawArg = process.argv.slice(2).find(a => !a.startsWith('-'));
+    const iconPath = path.join(__dirname, 'assets', 'icon.png');
+    const icon = nativeImage.createFromPath(iconPath);
+    if (!icon.isEmpty()) {
+      if (process.env.NODE_ENV === 'development') {
+        app.dock.setIcon(icon);
+        app.dock.setBadge('DEV');
+      } else {
+        app.dock.setIcon(icon);
+      }
+    }
+
+    const userArgs = process.argv.slice(2);
+    const rawArg = userArgs.find(a => !a.startsWith('-'));
+    const exitDelay = parseExitAfterDelay(userArgs);
     buildMenu();
     createWindow(rawArg || null);
+
+    if (exitDelay !== null) {
+      setTimeout(() => app.quit(), exitDelay * 1000);
+    }
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow(null);
@@ -261,6 +282,6 @@ if (!gotLock) {
   });
 
   app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
+    app.quit();
   });
 }

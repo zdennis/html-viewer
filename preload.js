@@ -19,6 +19,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('get-recent-files');
   },
 
+  resizeToContent(contentHeight) {
+    return ipcRenderer.invoke('resize-to-content', { contentHeight });
+  },
+
+  copyToClipboard(text) {
+    return ipcRenderer.invoke('copy-to-clipboard', { text });
+  },
+
   onLoadUrl(callback) {
     ipcRenderer.on('load-url', (event, urlValue) => callback(urlValue));
   },
