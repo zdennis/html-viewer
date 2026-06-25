@@ -108,16 +108,19 @@ if git tag --list | grep -qx "$new_version"; then
   exit 1
 fi
 
-# Bump version in package.json
+# Bump version in package.json and main.js
 version_number="${new_version#v}"
 sed -i '' "s/\"version\": \".*\"/\"version\": \"${version_number}\"/" package.json
-
-# Also bump the version in app.setAboutPanelOptions in main.js
 sed -i '' "s/applicationVersion: '.*'/applicationVersion: '${version_number}'/" main.js
 
-git add package.json main.js
-git commit -m "Bump version to $new_version"
-git push origin main
+# Only commit if something actually changed
+if ! git diff --quiet package.json main.js; then
+  git add package.json main.js
+  git commit -m "Bump version to $new_version"
+  git push origin main
+else
+  echo "Version already at $new_version, skipping version bump commit."
+fi
 
 short_sha=$(git rev-parse --short HEAD)
 echo "Tagging $new_version at $short_sha..."
