@@ -19,6 +19,7 @@
  */
 
 const { spawn } = require('child_process');
+const os = require('os');
 const path = require('path');
 
 const args = process.argv.slice(2);
@@ -39,6 +40,7 @@ Arguments:
   <file-or-url>              Path to a local HTML file or a URL (http/https)
 
 Options:
+  -s, --session <name>       Name this viewer session (default: "default")
   --exit-after-delay <secs>  Automatically quit after N seconds
   -v, --version              Print version and exit
   -h, --help                 Show this help message
@@ -52,10 +54,26 @@ Examples:
   process.exit(0);
 }
 
+// Parse --session/-s before passing args to Electron
+let sessionName = 'default';
+for (let i = 0; i < args.length; i++) {
+  if ((args[i] === '--session' || args[i] === '-s') && args[i + 1]) {
+    sessionName = args[i + 1];
+    break;
+  }
+}
+
+const userDataDir = path.join(os.homedir(), '.html-viewer', 'sessions', sessionName);
+
 const electronBin = require('electron');
 const appDir = path.join(__dirname, '..');
 
-const child = spawn(electronBin, [appDir, ...args], {
+const child = spawn(electronBin, [
+  `--user-data-dir=${userDataDir}`,
+  appDir,
+  `--viewer-session=${sessionName}`,
+  ...args,
+], {
   detached: true,
   stdio: 'ignore',
 });

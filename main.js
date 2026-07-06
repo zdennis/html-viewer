@@ -39,6 +39,13 @@ function parseExitAfterDelay(argv) {
   return isNaN(val) ? null : val;
 }
 
+function parseSessionName(argv) {
+  const flag = argv.find(a => a.startsWith('--viewer-session='));
+  return flag ? flag.slice('--viewer-session='.length) : 'default';
+}
+
+const sessionName = parseSessionName(process.argv);
+
 // ── Recent files (manual JSON, no electron-store) ──────────────────────────
 
 function recentFilePath() {
@@ -224,7 +231,7 @@ function createWindow(initialTarget) {
 
 let rawTarget = null;
 
-ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget, navState: navState() }));
+ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget, navState: navState(), sessionName }));
 
 ipcMain.handle('nav-back', () => {
   if (navIndex <= 0) return;

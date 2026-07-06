@@ -2,6 +2,7 @@ const webview = document.getElementById('webview');
 const shrinkBtn = document.getElementById('shrink-btn');
 const expandOverlay = document.getElementById('expand-overlay');
 const titlebarLabel = document.getElementById('titlebar-label');
+const sessionBadge = document.getElementById('session-badge');
 const navBackBtn = document.getElementById('nav-back');
 const navForwardBtn = document.getElementById('nav-forward');
 const notFound = document.getElementById('not-found');
@@ -78,8 +79,9 @@ function hideNotFound() {
 }
 
 async function loadInitialUrl() {
-  const { url, raw, navState } = await window.electronAPI.getUrl();
+  const { url, raw, navState, sessionName } = await window.electronAPI.getUrl();
   if (navState) applyNavState(navState);
+  if (sessionName) sessionBadge.textContent = sessionName;
   if (url) {
     webview.src = url;
     updateTitle(url, raw);
