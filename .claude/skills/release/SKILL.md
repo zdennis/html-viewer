@@ -27,13 +27,14 @@ When the user invokes this skill:
 1. **Verify on main branch** — if not, inform the user and stop
 2. **Verify no uncommitted changes** to tracked files — untracked files are fine
 3. `./release.sh` bumps `package.json` and `main.js` automatically — do not edit them manually
+4. `./release.sh` pushes both the version bump commit and the git tag to the remote
 
 ### If an argument is provided (patch, minor, major, or explicit version):
 
 Skip change analysis and pass the argument directly to `./release.sh`:
 
 1. Run `./release.sh <argument>`
-2. Report the result to the user
+2. Report the result to the user, confirming the version bump commit and tag were pushed
 
 ### If NO argument is provided:
 
@@ -53,6 +54,7 @@ Skip change analysis and pass the argument directly to `./release.sh`:
    - Recommend bump type with reasoning
    - Wait for user to confirm or choose differently
 6. Once confirmed, run `./release.sh <bump-type-or-version>`
+7. Report the result to the user, confirming the version bump commit and tag were pushed
 
 ## Change Analysis Guidelines
 
