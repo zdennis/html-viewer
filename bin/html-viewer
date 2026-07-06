@@ -23,6 +23,12 @@ const path = require('path');
 
 const args = process.argv.slice(2);
 
+if (args[0] === '-v' || args[0] === '--version' || args[0] === 'version') {
+  const { version } = require('../package.json');
+  console.log(`v${version}`);
+  process.exit(0);
+}
+
 if (args.length === 0 || args[0] === '-h' || args[0] === '--help' || args[0] === 'help') {
   console.log(`
 Usage: html-viewer <file-or-url> [options]
@@ -34,6 +40,7 @@ Arguments:
 
 Options:
   --exit-after-delay <secs>  Automatically quit after N seconds
+  -v, --version              Print version and exit
   -h, --help                 Show this help message
   help                       Show this help message
 
