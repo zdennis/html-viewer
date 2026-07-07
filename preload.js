@@ -46,4 +46,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onLoadUrl(callback) {
     ipcRenderer.on('load-url', (event, urlValue) => callback(urlValue));
   },
+
+  onZoom(callback) {
+    ipcRenderer.on('zoom', (event, direction) => callback(direction));
+  },
 });

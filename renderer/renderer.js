@@ -140,6 +140,31 @@ shrinkBtn.addEventListener('click', async () => {
   expandOverlay.classList.add('visible');
 });
 
+// ── Zoom ───────────────────────────────────────────────────────────────────
+
+const ZOOM_STEP = 0.1;
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 5.0;
+
+function applyZoom(direction) {
+  const current = webview.getZoomFactor();
+  let next;
+  if (direction === 'in')    next = Math.min(ZOOM_MAX, Math.round((current + ZOOM_STEP) * 10) / 10);
+  else if (direction === 'out')  next = Math.max(ZOOM_MIN, Math.round((current - ZOOM_STEP) * 10) / 10);
+  else                           next = 1.0;
+  webview.setZoomFactor(next);
+}
+
+window.electronAPI.onZoom(applyZoom);
+
+// Keyboard shortcuts (supplement the menu accelerators for the webview context)
+window.addEventListener('keydown', (e) => {
+  if (!e.metaKey && !e.ctrlKey) return;
+  if (e.key === '=' || e.key === '+') { e.preventDefault(); applyZoom('in'); }
+  else if (e.key === '-')             { e.preventDefault(); applyZoom('out'); }
+  else if (e.key === '0')             { e.preventDefault(); applyZoom('reset'); }
+});
+
 // ── Expand from corner ─────────────────────────────────────────────────────
 
 expandOverlay.addEventListener('click', async () => {

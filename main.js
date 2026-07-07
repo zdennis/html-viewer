@@ -176,6 +176,22 @@ function buildMenu() {
         { role: 'reload' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
+        { type: 'separator' },
+        {
+          label: 'Actual Size',
+          accelerator: 'CmdOrCtrl+0',
+          click() { if (mainWindow) mainWindow.webContents.send('zoom', 'reset'); },
+        },
+        {
+          label: 'Zoom In',
+          accelerator: 'CmdOrCtrl+Plus',
+          click() { if (mainWindow) mainWindow.webContents.send('zoom', 'in'); },
+        },
+        {
+          label: 'Zoom Out',
+          accelerator: 'CmdOrCtrl+-',
+          click() { if (mainWindow) mainWindow.webContents.send('zoom', 'out'); },
+        },
       ],
     },
   ];
