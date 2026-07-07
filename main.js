@@ -44,6 +44,17 @@ function parseSessionName(argv) {
   return flag ? flag.slice('--viewer-session='.length) : 'default';
 }
 
+function parseFileArg(argv) {
+  // Skip the value that follows --session or -s so it isn't mistaken for a file path
+  const skip = new Set();
+  for (let i = 0; i < argv.length; i++) {
+    if ((argv[i] === '--session' || argv[i] === '-s') && argv[i + 1]) {
+      skip.add(argv[i + 1]);
+    }
+  }
+  return argv.find(a => !a.startsWith('-') && a !== __dirname && !skip.has(a)) || null;
+}
+
 const sessionName = parseSessionName(process.argv);
 
 // ── Recent files (manual JSON, no electron-store) ──────────────────────────
@@ -322,7 +333,7 @@ if (!gotLock) {
 } else {
   app.on('second-instance', (event, argv) => {
     // argv contains [electronBinary, appDir, ...userArgs]; skip both leading paths
-    const raw = argv.slice(2).find(a => !a.startsWith('-') && a !== __dirname);
+    const raw = parseFileArg(argv.slice(2));
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
@@ -353,7 +364,7 @@ if (!gotLock) {
     }
 
     const userArgs = process.argv.slice(2);
-    const rawArg = userArgs.find(a => !a.startsWith('-') && a !== __dirname);
+    const rawArg = parseFileArg(userArgs);
     const exitDelay = parseExitAfterDelay(userArgs);
     buildMenu();
     createWindow(rawArg || null);
