@@ -249,6 +249,21 @@ function createWindow(initialTarget) {
 
   mainWindow.webContents.once('did-finish-load', () => sendNavState());
 
+  mainWindow.webContents.on('did-attach-webview', (event, webContents) => {
+    webContents.on('will-navigate', (e, url) => {
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        e.preventDefault();
+        shell.openExternal(url);
+      }
+    });
+    webContents.setWindowOpenHandler(({ url }) => {
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        shell.openExternal(url);
+      }
+      return { action: 'deny' };
+    });
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

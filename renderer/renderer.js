@@ -94,6 +94,7 @@ webview.addEventListener('context-menu', (e) => {
   window.electronAPI.showContextMenu(e.params.selectionText || '');
 });
 
+
 webview.addEventListener('did-finish-load', () => {
   hideNotFound();
   webview.executeJavaScript('document.documentElement.scrollHeight').then(contentHeight => {
