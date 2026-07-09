@@ -12,6 +12,7 @@
  *
  * Examples:
  *   html-viewer ~/Desktop/page.html
+ *   html-viewer ~/Documents/notes.md
  *   html-viewer https://example.com
  *
  * When installed as a macOS app, you can also open files via:
@@ -34,10 +35,11 @@ if (args.length === 0 || args[0] === '-h' || args[0] === '--help' || args[0] ===
   console.log(`
 Usage: html-viewer <file-or-url> [options]
 
-Opens an HTML file or URL in an always-on-top viewer window.
+Opens an HTML file, Markdown file, or URL in an always-on-top viewer window.
+Markdown files (.md) are rendered with GitHub-flavored markdown styling.
 
 Arguments:
-  <file-or-url>              Path to a local HTML file or a URL (http/https)
+  <file-or-url>              Path to a local HTML or Markdown file, or a URL (http/https)
 
 Options:
   -s, --session <name>       Name this viewer session (default: "default")
@@ -48,6 +50,7 @@ Options:
 
 Examples:
   html-viewer ~/Desktop/page.html
+  html-viewer ~/Documents/notes.md
   html-viewer https://example.com
   html-viewer ~/Desktop/page.html --exit-after-delay 10
   `.trim());

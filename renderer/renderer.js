@@ -153,13 +153,27 @@ function hideNotFound() {
   webview.style.display = '';
 }
 
+function isMarkdownFile(raw) {
+  return raw && /\.md$/i.test(raw.split('?')[0]);
+}
+
+async function loadUrl(resolvedUrl, raw) {
+  if (isMarkdownFile(raw)) {
+    const filePath = decodeURIComponent(new URL(resolvedUrl).pathname);
+    const html = await window.electronAPI.renderMarkdown(filePath);
+    webview.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  } else {
+    webview.src = resolvedUrl;
+  }
+}
+
 async function loadInitialUrl() {
   const { url, raw, navState, sessionName } = await window.electronAPI.getUrl();
   if (navState) applyNavState(navState);
   if (sessionName) sessionBadge.textContent = sessionName;
   if (url) {
-    webview.src = url;
     updateTitle(url, raw);
+    await loadUrl(url, raw);
   }
 }
 
@@ -186,10 +200,10 @@ webview.addEventListener('did-fail-load', (e) => {
 
 // ── Listen for new URLs from main process (recent files, second-instance) ──
 
-window.electronAPI.onLoadUrl(({ url: newUrl, raw }) => {
+window.electronAPI.onLoadUrl(async ({ url: newUrl, raw }) => {
   hideNotFound();
-  webview.src = newUrl;
   updateTitle(newUrl, raw);
+  await loadUrl(newUrl, raw);
   // If we're in shrunken state, expand back
   if (expandOverlay.classList.contains('visible')) {
     expandOverlay.classList.remove('visible');

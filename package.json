@@ -17,7 +17,12 @@
     },
     "linux": false,
     "win": false,
-    "files": ["main.js", "preload.js", "renderer/**/*", "assets/**/*"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
     "icon": "assets/icon.png",
     "bin": {
       "html-viewer": "bin/html-viewer"
@@ -25,7 +30,9 @@
   },
   "dependencies": {
     "electron": "^28.0.0",
-    "electron-store": "^8.1.0"
+    "electron-store": "^8.1.0",
+    "github-markdown-css": "^5.9.0",
+    "marked": "^18.0.5"
   },
   "devDependencies": {
     "electron-builder": "^24.0.0"

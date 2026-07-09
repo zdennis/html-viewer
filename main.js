@@ -4,6 +4,10 @@ const { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
+const githubMarkdownCss = fs.readFileSync(
+  path.join(__dirname, 'node_modules', 'github-markdown-css', 'github-markdown.css'),
+  'utf8'
+);
 
 const RECENT_MAX = 10;
 
@@ -299,7 +303,6 @@ ipcMain.handle('nav-forward', () => {
   }
 });
 
-
 ipcMain.handle('get-nav-history', () => ({
   history: navHistory.map(({ raw }) => raw),
   index: navIndex,
@@ -318,6 +321,26 @@ ipcMain.handle('nav-jump', (event, { index }) => {
 });
 
 ipcMain.handle('get-recent-files', () => loadRecent());
+
+ipcMain.handle('render-markdown', async (event, { filePath }) => {
+  const { marked } = await import('marked');
+  const markdown = fs.readFileSync(filePath, 'utf8');
+  const githubFlavoredMarkdown = true;
+  const body = marked.parse(markdown, { gfm: githubFlavoredMarkdown });
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+${githubMarkdownCss}
+body { padding: 32px; box-sizing: border-box; max-width: 900px; margin: 0 auto; }
+</style>
+</head>
+<body class="markdown-body">
+${body}
+</body>
+</html>`;
+});
 
 ipcMain.handle('copy-to-clipboard', (event, { text }) => {
   clipboard.writeText(text);

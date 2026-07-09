@@ -23,6 +23,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('resize-to-content', { contentHeight });
   },
 
+  renderMarkdown(filePath) {
+    return ipcRenderer.invoke('render-markdown', { filePath });
+  },
+
   copyToClipboard(text) {
     return ipcRenderer.invoke('copy-to-clipboard', { text });
   },
