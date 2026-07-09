@@ -39,6 +39,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('nav-forward');
   },
 
+  getNavHistory() {
+    return ipcRenderer.invoke('get-nav-history');
+  },
+
+  navJump(index) {
+    return ipcRenderer.invoke('nav-jump', { index });
+  },
+
   onNavState(callback) {
     ipcRenderer.on('nav-state', (event, state) => callback(state));
   },

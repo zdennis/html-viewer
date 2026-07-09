@@ -55,13 +55,88 @@ function applyNavState({ canBack, canForward }) {
   navForwardBtn.disabled = !canForward;
 }
 
-navBackBtn.addEventListener('click', async () => {
-  await window.electronAPI.navBack();
+// ── Nav popup ──────────────────────────────────────────────────────────────
+
+const navPopup = document.getElementById('nav-popup');
+const LONG_PRESS_MS = 400;
+
+function closeNavPopup() {
+  navPopup.classList.remove('visible');
+  navPopup.innerHTML = '';
+}
+
+async function showNavPopup(btn, direction) {
+  const { history, index } = await window.electronAPI.getNavHistory();
+  if (history.length === 0) return;
+
+  navPopup.innerHTML = '';
+
+  // For back: show entries before current (oldest→newest), most recent at top
+  // For forward: show entries after current (next→last)
+  let items;
+  if (direction === 'back') {
+    items = history.slice(0, index).map((raw, i) => ({ raw, histIndex: i })).reverse();
+  } else {
+    items = history.slice(index + 1).map((raw, i) => ({ raw, histIndex: index + 1 + i }));
+  }
+
+  if (items.length === 0) return;
+
+  items.forEach(({ raw, histIndex }) => {
+    const el = document.createElement('div');
+    el.className = 'nav-popup-item' + (histIndex === index ? ' current' : '');
+    const label = raw.startsWith('file://')
+      ? decodeURIComponent(raw.replace(/^file:\/\//, '').split('/').pop())
+      : raw.split('/').pop() || raw;
+    el.textContent = label;
+    el.title = raw;
+    el.addEventListener('mousedown', async (e) => {
+      e.stopPropagation();
+      closeNavPopup();
+      await window.electronAPI.navJump(histIndex);
+    });
+    navPopup.appendChild(el);
+  });
+
+  // Position below the button
+  const rect = btn.getBoundingClientRect();
+  navPopup.style.top = `${rect.bottom + 4}px`;
+  navPopup.style.left = `${rect.left}px`;
+  navPopup.classList.add('visible');
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (!navPopup.contains(e.target)) closeNavPopup();
 });
 
-navForwardBtn.addEventListener('click', async () => {
-  await window.electronAPI.navForward();
-});
+function attachNavBtn(btn, direction, navFn) {
+  let pressTimer = null;
+  let didLongPress = false;
+
+  btn.addEventListener('mousedown', () => {
+    didLongPress = false;
+    pressTimer = setTimeout(() => {
+      didLongPress = true;
+      showNavPopup(btn, direction);
+    }, LONG_PRESS_MS);
+  });
+
+  btn.addEventListener('mouseup', () => {
+    clearTimeout(pressTimer);
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    clearTimeout(pressTimer);
+  });
+
+  btn.addEventListener('click', async () => {
+    if (didLongPress) return;
+    await navFn();
+  });
+}
+
+attachNavBtn(navBackBtn, 'back', () => window.electronAPI.navBack());
+attachNavBtn(navForwardBtn, 'forward', () => window.electronAPI.navForward());
 
 window.electronAPI.onNavState(applyNavState);
 

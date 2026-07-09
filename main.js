@@ -299,6 +299,24 @@ ipcMain.handle('nav-forward', () => {
   }
 });
 
+
+ipcMain.handle('get-nav-history', () => ({
+  history: navHistory.map(({ raw }) => raw),
+  index: navIndex,
+}));
+
+ipcMain.handle('nav-jump', (event, { index }) => {
+  if (index < 0 || index >= navHistory.length) return;
+  navIndex = index;
+  const { url, raw } = navHistory[navIndex];
+  targetUrl = url;
+  rawTarget = raw;
+  if (mainWindow) {
+    mainWindow.webContents.send('load-url', { url: url, raw });
+    sendNavState();
+  }
+});
+
 ipcMain.handle('get-recent-files', () => loadRecent());
 
 ipcMain.handle('copy-to-clipboard', (event, { text }) => {
