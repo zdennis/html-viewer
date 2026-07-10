@@ -182,6 +182,16 @@ function buildMenu() {
         { role: 'togglefullscreen' },
         { type: 'separator' },
         {
+          label: 'Toggle Window Visibility',
+          accelerator: 'Command+Alt+\'',
+          click() {
+            const wins = BrowserWindow.getAllWindows();
+            const anyVisible = wins.some(w => w.isVisible());
+            wins.forEach(w => anyVisible ? w.hide() : w.show());
+          },
+        },
+        { type: 'separator' },
+        {
           label: 'Actual Size',
           accelerator: 'CmdOrCtrl+0',
           click() { if (mainWindow) mainWindow.webContents.send('zoom', 'reset'); },
