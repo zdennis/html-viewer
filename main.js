@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, screen, shell } = require('electron');
+const { app, BrowserWindow, clipboard, globalShortcut, ipcMain, Menu, nativeImage, screen, shell } = require('electron');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -445,9 +445,19 @@ if (!gotLock) {
       setTimeout(() => app.quit(), exitDelay * 1000);
     }
 
+    globalShortcut.register('Command+Alt+\'', () => {
+      const wins = BrowserWindow.getAllWindows();
+      const anyVisible = wins.some(w => w.isVisible());
+      wins.forEach(w => anyVisible ? w.hide() : w.show());
+    });
+
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow(null);
     });
+  });
+
+  app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
   });
 
   app.on('window-all-closed', () => {
