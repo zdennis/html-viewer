@@ -1,7 +1,7 @@
 {
   "name": "html-viewer",
   "version": "0.10.0",
-  "description": "A macOS HTML viewer launched from CLI",
+  "description": "A macOS HTML and Markdown viewer launched from CLI",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

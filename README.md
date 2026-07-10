@@ -1,9 +1,10 @@
 # html-viewer
 
-An always-on-top macOS window for viewing HTML files and URLs from the command line.
+An always-on-top macOS window for viewing HTML files, Markdown files, and URLs from the command line.
 
 ```bash
 html-viewer ~/path/to/file.html
+html-viewer ~/path/to/notes.md
 html-viewer https://example.com
 ```
 
@@ -47,6 +48,9 @@ html-viewer <file-or-url> [options]
 ```bash
 # Open a local HTML file
 html-viewer ~/Documents/report.html
+
+# Open a Markdown file (rendered with GitHub-flavored styling)
+html-viewer ~/Documents/notes.md
 
 # Open a URL
 html-viewer https://example.com
@@ -97,3 +101,5 @@ npm run build
 ## Keyboard shortcuts
 
 Standard macOS shortcuts work inside the webview: `Cmd+R` reloads, `Cmd+Ctrl+F` toggles fullscreen.
+
+`Cmd+Opt+'` toggles all html-viewer windows visible/hidden globally — works even when the app is not focused.
