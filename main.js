@@ -418,7 +418,7 @@ ipcMain.handle('window-expand', (event, { x, y, width, height }) => {
 
 app.setAboutPanelOptions({
   applicationName: 'HTML Viewer',
-  applicationVersion: '0.10.1',
+  applicationVersion: '0.11.0',
 });
 
 // Single instance lock
