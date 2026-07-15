@@ -238,6 +238,8 @@ function loadUrlInWindow(raw, isNavigation = false) {
 }
 
 function createWindow(initialTarget) {
+  BrowserWindow.getAllWindows().forEach(w => w.show());
+
   const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize;
 
   // Resolve before the window loads so get-url IPC finds it immediately
@@ -428,6 +430,7 @@ if (!gotLock) {
     // argv contains [electronBinary, appDir, ...userArgs]; skip both leading paths
     const raw = parseFileArg(argv.slice(2));
     if (mainWindow) {
+      BrowserWindow.getAllWindows().forEach(w => w.show());
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
       if (raw) loadUrlInWindow(raw);
