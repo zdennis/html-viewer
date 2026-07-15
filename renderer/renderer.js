@@ -247,12 +247,17 @@ function applyZoom(direction) {
 
 window.electronAPI.onZoom(applyZoom);
 
+window.electronAPI.onReload(() => {
+  webview.reload();
+});
+
 // Keyboard shortcuts (supplement the menu accelerators for the webview context)
 window.addEventListener('keydown', (e) => {
   if (!e.metaKey && !e.ctrlKey) return;
   if (e.key === '=' || e.key === '+') { e.preventDefault(); applyZoom('in'); }
   else if (e.key === '-')             { e.preventDefault(); applyZoom('out'); }
   else if (e.key === '0')             { e.preventDefault(); applyZoom('reset'); }
+  else if (e.key === 'r')             { e.preventDefault(); webview.reload(); }
 });
 
 // ── Expand from corner ─────────────────────────────────────────────────────

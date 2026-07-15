@@ -177,7 +177,13 @@ function buildMenu() {
               },
             ]
           : []),
-        { role: 'reload' },
+        {
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click(_, win) {
+            if (win) win.webContents.send('reload-webview');
+          },
+        },
         { type: 'separator' },
         { role: 'togglefullscreen' },
         { type: 'separator' },
@@ -359,6 +365,11 @@ ipcMain.handle('copy-to-clipboard', (event, { text }) => {
 ipcMain.handle('show-context-menu', (event, { selectionText }) => {
   const hasSelection = selectionText && selectionText.trim().length > 0;
   const template = [
+    {
+      label: 'Reload',
+      click() { event.sender.send('reload-webview'); },
+    },
+    { type: 'separator' },
     {
       label: 'Copy',
       enabled: hasSelection,
