@@ -219,6 +219,24 @@ function buildMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
+// ── File watcher ───────────────────────────────────────────────────────────
+
+let fileWatcher = null;
+
+function watchFile(raw) {
+  if (fileWatcher) {
+    fileWatcher.close();
+    fileWatcher = null;
+  }
+  if (!raw || /^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(raw)) return;
+  const abs = path.resolve(raw);
+  try {
+    fileWatcher = fs.watch(abs, () => {
+      if (mainWindow) mainWindow.webContents.send('reload-webview', { filePath: abs });
+    });
+  } catch (_) {}
+}
+
 // ── Window management ──────────────────────────────────────────────────────
 
 function loadUrlInWindow(raw, isNavigation = false) {
@@ -226,6 +244,7 @@ function loadUrlInWindow(raw, isNavigation = false) {
   if (!resolved) return;
   targetUrl = resolved;
   rawTarget = raw;
+  watchFile(raw);
   if (!isNavigation) {
     pushNav(resolved, raw);
     addRecent(raw);
@@ -246,6 +265,7 @@ function createWindow(initialTarget) {
   if (initialTarget) {
     targetUrl = resolveTarget(initialTarget);
     rawTarget = initialTarget;
+    watchFile(initialTarget);
     pushNav(targetUrl, initialTarget);
     addRecent(initialTarget);
     buildMenu();

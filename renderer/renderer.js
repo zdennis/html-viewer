@@ -247,9 +247,29 @@ function applyZoom(direction) {
 
 window.electronAPI.onZoom(applyZoom);
 
-window.electronAPI.onReload(() => {
+const reloadToast = document.getElementById('reload-toast');
+let reloadToastTimer = null;
+let pendingReloadMessage = null;
+
+function hideReloadToast() {
+  reloadToast.classList.remove('visible');
+}
+
+window.electronAPI.onReload(({ filePath } = {}) => {
+  pendingReloadMessage = filePath
+    ? `Reloaded. ${filePath} changed on disk.`
+    : 'Reloaded. File changed on disk.';
   webview.reload();
 });
+
+webview.addEventListener('did-finish-load', () => {
+  if (!pendingReloadMessage) return;
+  reloadToast.textContent = pendingReloadMessage;
+  pendingReloadMessage = null;
+  reloadToast.classList.add('visible');
+  clearTimeout(reloadToastTimer);
+  reloadToastTimer = setTimeout(hideReloadToast, 3000);
+}, true);
 
 // Keyboard shortcuts (supplement the menu accelerators for the webview context)
 window.addEventListener('keydown', (e) => {

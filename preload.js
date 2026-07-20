@@ -64,6 +64,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   onReload(callback) {
-    ipcRenderer.on('reload-webview', callback);
+    ipcRenderer.on('reload-webview', (event, data) => callback(data || {}));
   },
 });
