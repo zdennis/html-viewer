@@ -31,8 +31,8 @@ npm install
 Then symlink the binary somewhere on your PATH:
 
 ```bash
-ln -sf "$(pwd)/cli.js" ~/bin/html-viewer
-chmod +x cli.js
+ln -sf "$(pwd)/bin/html-viewer" ~/bin/html-viewer
+chmod +x bin/html-viewer
 ```
 
 ---
