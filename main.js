@@ -13,6 +13,7 @@ const RECENT_MAX = 10;
 
 let mainWindow = null;
 let targetUrl = null;
+let rawTarget = null;
 
 // ── Navigation history ─────────────────────────────────────────────────────
 
@@ -313,8 +314,6 @@ function createWindow(initialTarget) {
 
 // ── IPC handlers ───────────────────────────────────────────────────────────
 
-let rawTarget = null;
-
 ipcMain.handle('get-url', () => ({ url: targetUrl, raw: rawTarget, navState: navState(), sessionName }));
 
 ipcMain.handle('nav-back', () => {
@@ -361,10 +360,30 @@ ipcMain.handle('nav-jump', (event, { index }) => {
 ipcMain.handle('get-recent-files', () => loadRecent());
 
 ipcMain.handle('render-markdown', async (event, { filePath }) => {
+  // Validate filePath is an absolute path to a .md file that exists
+  const resolved = path.resolve(filePath);
+  if (!resolved.endsWith('.md') && !resolved.endsWith('.MD')) {
+    throw new Error('Invalid file path');
+  }
+  if (!fs.existsSync(resolved)) {
+    throw new Error('File not found');
+  }
+  const sanitizeHtml = require('sanitize-html');
   const { marked } = await import('marked');
-  const markdown = fs.readFileSync(filePath, 'utf8');
+  const markdown = fs.readFileSync(resolved, 'utf8');
   const githubFlavoredMarkdown = true;
-  const body = marked.parse(markdown, { gfm: githubFlavoredMarkdown });
+  const rawBody = marked.parse(markdown, { gfm: githubFlavoredMarkdown });
+  const body = sanitizeHtml(rawBody, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'del', 'input', 'details', 'summary', 'sup', 'sub']),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      '*': ['class', 'id'],
+      'a': ['href', 'name', 'target', 'rel'],
+      'img': ['src', 'alt', 'title', 'width', 'height'],
+      'input': ['type', 'checked', 'disabled'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto'],
+  });
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -425,7 +444,8 @@ ipcMain.handle('resize-to-content', (event, { contentHeight }) => {
   const bounds = mainWindow.getBounds();
   const display = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
   const maxHeight = Math.round(display.workArea.height * 0.8);
-  const newHeight = Math.min(contentHeight, maxHeight);
+  const MIN_HEIGHT = 100;
+  const newHeight = Math.max(MIN_HEIGHT, Math.min(contentHeight, maxHeight));
   mainWindow.setBounds({ ...bounds, height: newHeight });
 });
 
@@ -502,6 +522,10 @@ if (!gotLock) {
 
   app.on('will-quit', () => {
     globalShortcut.unregisterAll();
+    if (fileWatcher) {
+      fileWatcher.close();
+      fileWatcher = null;
+    }
   });
 
   app.on('window-all-closed', () => {
