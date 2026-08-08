@@ -3,10 +3,28 @@
   "version": "0.12.0",
   "description": "A macOS HTML and Markdown viewer launched from CLI",
   "main": "main.js",
+  "author": "Zach Dennis",
+  "license": "MIT",
+  "homepage": "https://github.com/zdennis/html-viewer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zdennis/html-viewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zdennis/html-viewer/issues"
+  },
+  "keywords": ["html", "markdown", "viewer", "electron", "macos", "cli"],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "html-viewer": "bin/html-viewer"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "NODE_ENV=development electron .",
-    "build": "electron-builder --mac"
+    "build": "electron-builder --mac",
+    "test": "echo \"No tests yet\" && exit 0"
   },
   "build": {
     "appId": "com.zdennis.html-viewer",
@@ -23,16 +41,13 @@
       "renderer/**/*",
       "assets/**/*"
     ],
-    "icon": "assets/icon.png",
-    "bin": {
-      "html-viewer": "bin/html-viewer"
-    }
+    "icon": "assets/icon.png"
   },
   "dependencies": {
     "electron": "^28.0.0",
-    "electron-store": "^8.1.0",
     "github-markdown-css": "^5.9.0",
-    "marked": "^18.0.5"
+    "marked": "^18.0.5",
+    "sanitize-html": "^2.13.0"
   },
   "devDependencies": {
     "electron-builder": "^24.0.0"
