@@ -409,7 +409,7 @@ function openInDefaultBrowser() {
   }
 }
 
-ipcMain.handle('show-context-menu', (event, { selectionText }) => {
+ipcMain.handle('show-context-menu', (event, { selectionText, selectionHtml }) => {
   const hasSelection = selectionText && selectionText.trim().length > 0;
   const template = [
     {
@@ -426,7 +426,9 @@ ipcMain.handle('show-context-menu', (event, { selectionText }) => {
       label: 'Copy',
       enabled: hasSelection,
       click() {
-        if (hasSelection) clipboard.writeText(selectionText);
+        if (hasSelection) {
+          clipboard.write(selectionHtml ? { html: selectionHtml, text: selectionText } : { text: selectionText });
+        }
       },
     },
     { type: 'separator' },

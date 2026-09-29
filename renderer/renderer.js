@@ -179,8 +179,42 @@ async function loadInitialUrl() {
 
 loadInitialUrl();
 
-webview.addEventListener('context-menu', (e) => {
-  window.electronAPI.showContextMenu(e.params.selectionText || '');
+webview.addEventListener('context-menu', async (e) => {
+  const params = e.params;
+  let selectionHtml = '';
+  if (params.selectionText && params.selectionText.trim()) {
+    try {
+      selectionHtml = await webview.executeJavaScript(
+        '(function() {' +
+        '  var s = window.getSelection();' +
+        '  if (!s.rangeCount) return "";' +
+        '  var r = s.getRangeAt(0);' +
+        '  var d = document.createElement("div");' +
+        '  d.appendChild(r.cloneContents());' +
+        '  var html = d.innerHTML;' +
+        '  var n = r.commonAncestorContainer;' +
+        '  if (n.nodeType === 3) n = n.parentElement;' +
+        // a selection fully inside a single anchor drops the <a> (cloneContents
+        // omits partially-covered ancestors), so re-wrap it like native copy does
+        '  if (n && n.tagName === "A" && n.href) {' +
+        '    var full = document.createRange();' +
+        '    full.selectNodeContents(n);' +
+        '    if (r.compareBoundaryPoints(Range.START_TO_START, full) >= 0 &&' +
+        '        r.compareBoundaryPoints(Range.END_TO_END, full) <= 0) {' +
+        '      var clone = n.cloneNode(false);' +
+        '      clone.innerHTML = html;' +
+        '      html = clone.outerHTML;' +
+        '    }' +
+        '  }' +
+        '  return html;' +
+        '})()'
+      );
+    } catch (_) {}
+  }
+  window.electronAPI.showContextMenu({
+    selectionText: params.selectionText || '',
+    selectionHtml,
+  });
 });
 
 
