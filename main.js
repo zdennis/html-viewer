@@ -409,8 +409,9 @@ function openInDefaultBrowser() {
   }
 }
 
-ipcMain.handle('show-context-menu', (event, { selectionText, selectionHtml }) => {
+ipcMain.handle('show-context-menu', (event, { selectionText, selectionHtml, linkURL }) => {
   const hasSelection = selectionText && selectionText.trim().length > 0;
+  const hasLink = Boolean(linkURL);
   const template = [
     {
       label: 'Reload',
@@ -429,6 +430,20 @@ ipcMain.handle('show-context-menu', (event, { selectionText, selectionHtml }) =>
         if (hasSelection) {
           clipboard.write(selectionHtml ? { html: selectionHtml, text: selectionText } : { text: selectionText });
         }
+      },
+    },
+    {
+      label: 'Copy Text',
+      enabled: hasSelection,
+      click() {
+        if (hasSelection) clipboard.writeText(selectionText);
+      },
+    },
+    {
+      label: 'Copy Link Address',
+      enabled: hasLink,
+      click() {
+        if (hasLink) clipboard.writeText(linkURL);
       },
     },
     { type: 'separator' },

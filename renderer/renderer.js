@@ -214,6 +214,7 @@ webview.addEventListener('context-menu', async (e) => {
   window.electronAPI.showContextMenu({
     selectionText: params.selectionText || '',
     selectionHtml,
+    linkURL: params.linkURL || '',
   });
 });
 
