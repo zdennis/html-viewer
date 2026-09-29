@@ -403,12 +403,23 @@ ipcMain.handle('copy-to-clipboard', (event, { text }) => {
   clipboard.writeText(text);
 });
 
+function openInDefaultBrowser() {
+  if (targetUrl && !targetUrl.startsWith('data:')) {
+    shell.openExternal(targetUrl);
+  }
+}
+
 ipcMain.handle('show-context-menu', (event, { selectionText }) => {
   const hasSelection = selectionText && selectionText.trim().length > 0;
   const template = [
     {
       label: 'Reload',
       click() { event.sender.send('reload-webview'); },
+    },
+    {
+      label: 'Open in Default Browser',
+      enabled: Boolean(targetUrl),
+      click() { openInDefaultBrowser(); },
     },
     { type: 'separator' },
     {
